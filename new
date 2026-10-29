@@ -1,1 +1,1 @@
-Lack of SMTP Recipient Verification (also known as an Accept-All configuration) occurs when a mail server accepts and queues email messages for non-existent recipients during the SMTP transaction. The server returns a 250 OK status regardless of whether the requested mailbox actually exists in the directory.
+CVSS:4.0/AV:N/AC:L/AT:N/PR:N/UI:N/VC:N/VI:N/VA:L/SC:N/SI:N/SA:N
