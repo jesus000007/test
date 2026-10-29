@@ -8,11 +8,11 @@ Here is the complete, corrected format:
 SMTP Sender Spoofing occurs when a mail server accepts email messages with a forged `MAIL FROM` address without requiring the sender to authenticate. Because the server does not verify that the sender is authorized to use the domain, an unauthenticated external attacker can impersonate any internal user or executive. This vulnerability is the primary technical enabler of Business Email Compromise (BEC) and targeted phishing attacks, categorized under CWE-290.
 
 ### Observation
-During the assessment of the SMTP service at `202.90.68.114:25`, it was observed that the server accepts arbitrary `MAIL FROM` addresses for the `sg-bdp.pf` domain from unauthenticated external connections. By utilizing a raw Netcat connection, a manual SMTP transaction was initiated. The server returned a `250 ok` status after the client provided `MAIL FROM:<ceo@sg-bdp.pf>`, confirming that an external attacker can successfully spoof the identity of the bank's Chief Executive Officer.
+During the assessment of the SMTP service at `ip`, it was observed that the server accepts arbitrary `MAIL FROM` addresses for the `sg-bdp.pf` domain from unauthenticated external connections. By utilizing a raw Netcat connection, a manual SMTP transaction was initiated. The server returned a `250 ok` status after the client provided `MAIL FROM:<ceo@sg-bdp.pf>`, confirming that an external attacker can successfully spoof the identity of the bank's Chief Executive Officer.
 
 **Command:**
 ```bash
-printf 'EHLO pentest.local\r\nMAIL FROM:<ceo@sg-bdp.pf>\r\nRCPT TO:<postmaster@sg-bdp.pf>\r\nRCPT TO:<nonexistent-xyz-9x8@sg-bdp.pf>\r\nQUIT\r\n' | timeout 8 nc -nv 202.90.68.114 25
+printf 'EHLO pentest.local\r\nMAIL FROM:<ceo@sg-bdp.pf>\r\nRCPT TO:<postmaster@sg-bdp.pf>\r\nRCPT TO:<nonexistent-xyz-9x8@sg-bdp.pf>\r\nQUIT\r\n' | timeout 8 nc -nv ip 25
 ```
 
 **Output:**
