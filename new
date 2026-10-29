@@ -1,1 +1,7 @@
-During the assessment of the SMTP server (202.90.68.114), it was observed that the netqmail service is configured with an "Accept-All" policy. The server indiscriminately returns a 250 OK status for non-existent recipient addresses (e.g., random-junk-abc123@sg-bdp.pf) and successfully queues the messages. This configuration allows an unauthenticated attacker to force the server to process and store thousands of undeliverable emails, which can lead to resource exhaustion (Denial of Service) and creates the prerequisite for email backscatter attacks. It is recommended to implement recipient verification (e.g., via the chkuser patch for qmail) to reject invalid mailboxes with a 550 User unknown error during the SMTP transaction.
+Allows unauthenticated attackers to exhaust server disk space and processing resources by flooding the mail queue with undeliverable messages.
+
+Creates a significant backscatter risk that can lead to the organization's IP being blacklisted by anti-spam services.
+
+Causes unnecessary consumption of server bandwidth and CPU to process and bounce invalid emails.
+
+Damages organizational reputation and risks the rejection of legitimate outbound emails.
