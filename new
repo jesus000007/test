@@ -1,1 +1,3 @@
+During testing of the login endpoint (/api/app/contrats/auth/getStatusLogin), multiple malicious payloads were injected into the username parameter, including XSS (<script>alert(1)</script>) and SQL Injection (' OR '1'='1).
 
+The F5 BIG-IP ASM WAF failed to inspect the parameter and allowed all tested payloads to pass directly to the backend server. Instead of a 403 Forbidden or a 247-byte WAF block page, the server returned HTTP/1.1 200 OK with a standard JSON response. While the backend application is currently secure (it safely handled the payloads, as seen by the generic 1008 error), the WAF provided absolutely no protection for this pre-authentication endpoint.
