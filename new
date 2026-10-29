@@ -1,3 +1,1 @@
-https://datatracker.ietf.org/doc/draft-kucherawy-dmarc-base/01/?include_text=1#7
-https://deepwiki.com/sagredo-dev/qmail/4.1-address-validation-(chkuser)#1
-https://hacktricks.wiki/zh/network-services-pentesting/pentesting-smtp/
+During the assessment of the SMTP server (202.90.68.114), it was observed that the service does not support the STARTTLS extension, failing to negotiate a secure TLS handshake (as confirmed by the openssl s_client output showing Cipher is (NONE)). Because all SMTP traffic is forced to remain in cleartext, a network-positioned attacker can intercept, read, and modify sensitive email contents and headers in transit.
