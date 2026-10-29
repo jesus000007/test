@@ -1,45 +1,42 @@
-My apologies for the misunderstanding. You wanted the **entire** finding rewritten with the Impact and Remediation sections as clean, single-line bullet points without sub-headings. 
+Here is exactly what you need to highlight in this Burp Suite screenshot to create the perfect Proof of Concept (PoC) for your report.
 
-Here is the complete, corrected format:
+You have actually captured **two** findings in one screenshot, so you need to highlight both sides.
 
-***
+### 🔴 What to Highlight on the LEFT (The Request)
+*   **Highlight the `username` parameter:**
+    `username=12345678' OR '1'='1`
+*   **Why:** This proves you sent a malicious SQL Injection payload to the server.
 
-### Description
-SMTP Sender Spoofing occurs when a mail server accepts email messages with a forged `MAIL FROM` address without requiring the sender to authenticate. Because the server does not verify that the sender is authorized to use the domain, an unauthenticated external attacker can impersonate any internal user or executive. This vulnerability is the primary technical enabler of Business Email Compromise (BEC) and targeted phishing attacks, categorized under CWE-290.
+### 🟢 What to Highlight on the RIGHT (The Response)
+*   **Highlight line 1: `HTTP/1.1 200 OK`**
+*   **Why:** This proves the **WAF was bypassed**. If the WAF had blocked it, you would have seen `HTTP/1.1 403 Forbidden` or a 247-byte HTML "Request Rejected" page.
+*   **Highlight the JSON body:**
+    `{ "Map": { "code": "1008", "message": "Les informations d'identification sont incorrectes" } }`
+*   **Why:** This proves the **Application is Secure**. The backend received the SQLi payload, treated it as a harmless string, and returned a standard "Invalid credentials" error. (If the app were vulnerable, you would see a database error, a different code, or successful login).
 
-### Observation
-During the assessment of the SMTP service at `ip`, it was observed that the server accepts arbitrary `MAIL FROM` addresses for the `sg-bdp.pf` domain from unauthenticated external connections. By utilizing a raw Netcat connection, a manual SMTP transaction was initiated. The server returned a `250 ok` status after the client provided `MAIL FROM:<ceo@sg-bdp.pf>`, confirming that an external attacker can successfully spoof the identity of the bank's Chief Executive Officer.
+---
 
-**Command:**
-```bash
-printf 'EHLO pentest.local\r\nMAIL FROM:<ceo@sg-bdp.pf>\r\nRCPT TO:<postmaster@sg-bdp.pf>\r\nRCPT TO:<nonexistent-xyz-9x8@sg-bdp.pf>\r\nQUIT\r\n' | timeout 8 nc -nv ip 25
-```
+### 📝 How to write this in your report
 
-**Output:**
-```text
-220 mail ESMTP
-250-mail
-250-PIPELINING
-250 8BITMIME
-250 ok  <-- Spoofed CEO sender accepted
-250 ok  <-- Real recipient accepted
-250 ok  <-- Fake recipient accepted
-221 mail
-```
+Here is the exact way to structure this finding using this screenshot as your PoC.
 
-### Impact
-* An attacker can impersonate the CEO or CFO to send fraudulent emails requesting wire transfers, enabling highly damaging Business Email Compromise (BEC) attacks.
-* Malicious emails will bypass SPF/DKIM/DMARC checks at receiving servers because they genuinely originate from the bank's own IP, drastically increasing phishing success rates.
-* The bank's brand and customer trust are severely compromised if attackers use their own infrastructure to send phishing emails to customers or partners.
-* Attackers can bypass external defenses to send internal lateral phishing emails, spoofing colleagues to harvest credentials or deploy malware within the corporate network.
+#### Finding: WAF Policy Gap on Authentication Endpoint
+**Severity:** Medium (WAF Bypass / Defense-in-Depth Failure)
+**Affected Endpoint:** `/api/app/contrats/auth/getStatusLogin`
 
-### Remediation
-* Enforce SMTP AUTH for any user sending mail claiming to be from the `@sg-bdp.pf` domain, blocking unauthenticated external connections from using internal sender addresses.
-* Implement a strict DMARC policy (`v=DMARC1; p=reject;`) to force receiving servers to reject any spoofed email claiming to be from `@sg-bdp.pf` that fails authentication.
-* Configure Sender Policy Framework (SPF) and DomainKeys Identified Mail (DKIM) to cryptographically sign and authorize legitimate outbound email sources.
-* Migrate from the outdated netqmail 1.04 to a modern, supported MTA (such as Postfix) that provides robust access controls, sender validation, and native TLS support.
+**Description:**
+A Web Application Firewall (WAF) policy gap occurs when the WAF fails to inspect specific parameters or endpoints, allowing malicious traffic to reach the backend. 
 
-### Reference Links
-1. **OWASP – Email Spoofing:** https://owasp.org/www-community/attacks/Email_spoofing
-2. **MITRE CWE-290 – Authentication Bypass by Spoofing:** https://cwe.mitre.org/data/definitions/290.html
-3. **FBI IC3 – Business Email Compromise Advisory:** https://www.ic3.gov/Media/Y2023/PSA230609
+**Observation:**
+During testing, an SQL Injection payload (`12345678' OR '1'='1`) was injected into the `username` parameter of the login request. The F5 BIG-IP ASM WAF did not block the request, allowing it to reach the backend server (returning `HTTP/1.1 200 OK` instead of the WAF block page). However, the backend application successfully neutralized the attack, returning a generic `1008` error, indicating that parameterized queries are properly implemented to prevent SQL injection.
+
+*(Insert your highlighted Burp screenshot here)*
+> **Figure X: WAF Bypass PoC.** The SQLi payload in the `username` parameter (left) bypasses the WAF and reaches the backend server, which returns a `200 OK` with a safe `1008` error (right).
+
+**Impact:**
+*   **Defense-in-Depth Failure:** The WAF is not providing any protection for this parameter. If a future code update introduces a SQL injection vulnerability in the login logic, the WAF will not catch it.
+*   **Logging Blindspot:** Malicious SQLi attempts against this endpoint may not be properly flagged or blocked by the security operations center (SOC) because the WAF is ignoring them.
+
+**Remediation:**
+*   Update the F5 ASM policy to explicitly inspect the `username` parameter on the `/api/app/contrats/auth/getStatusLogin` endpoint.
+*   Ensure that SQLi and XSS signatures are active and applied to form-urlencoded POST bodies on this path.
