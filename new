@@ -1,1 +1,2 @@
-During the assessment of the SMTP server (202.90.68.114), it was observed that the service does not support the STARTTLS extension, failing to negotiate a secure TLS handshake (as confirmed by the openssl s_client output showing Cipher is (NONE)). Because all SMTP traffic is forced to remain in cleartext, a network-positioned attacker can intercept, read, and modify sensitive email contents and headers in transit.
+CVSS:4.0/AV:N/AC:L/AT:P/PR:N/UI:N/VC:H/VI:L/VA:N/SC:N/SI:N/SA:N
+
