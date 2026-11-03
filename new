@@ -1,19 +1,17 @@
-Image 1 (Test Plan): Verify authentication mechanisms (AUTH advertisement, submission ports) and perform credential brute-forcing if applicable.
+Image 1 (Burp - Path Traversal): Test for directory traversal/LFI via the SearchableText parameter; request blocked with a 403 Forbidden.
 
-Image 2 (F5 Login Page): Attempt to access the F5 management login portal (/tmui/login.jsp); request was blocked by a WAF.
+Image 2 (Terminal - SMTP Pipelining): Test SMTP pipelining by sending multiple commands in one connection; external relay attempts were rejected (553).
 
-Image 3 (F5 iControl): Attempt to access the F5 iControl portal; request was blocked by a WAF.
+Image 3 (Terminal - SMTP Smuggling): Test for SMTP smuggling/open relay using smtpsmug; server rejected the external domain (553).
 
-Image 4 (F5 API): Attempt to access the F5 management API endpoint (/mgmt/shared/echo); request was blocked by a WAF.
+Image 4 (Browser - SQLi): Test for SQL injection via the SearchableText parameter; payload was blocked (Forbidden).
 
-Image 5 (XSS Test): Test for reflected Cross-Site Scripting (XSS) via the SearchableText parameter; payload was blocked (Forbidden).
+Image 5 (Burp - SQLi): Test for SQL injection via the SearchableText parameter; request blocked with a 403 Forbidden.
 
-Image 6 (SMTP EXPN): Test if the SMTP EXPN command is enabled for user enumeration; result was 502 unimplemented.
+Image 6 (Terminal - TLS/SSL Scan): Scan SMTP port 25 for supported SSL/TLS ciphers; no SSL ciphers were found.
 
-Image 7 (Log4j/SSRF Test): Test for JNDI/LDAP injection (Log4j) via the SearchableText parameter; payload was blocked (Forbidden).
+Image 7 (Terminal - SMTP VRFY): Test SMTP VRFY command for user enumeration; server returned an ambiguous 252 response for all queries.
 
-Image 8 (Path Traversal Test): Test for directory traversal/LFI via the SearchableText parameter; payload was blocked (Forbidden).
+Image 8 (Browser - XSS): Test for reflected Cross-Site Scripting (XSS) via the SearchableText parameter; payload was blocked (Forbidden).
 
-Image 9 (Port Scan): Scan SMTP submission ports (465, 587) to check for open authenticated paths; both ports are filtered.
-
-Image 10 (Open Relay Test): Test the SMTP server for open relay by sending mail to an external domain; server rejected it with a 553 error (restricted relay).
+Image 9 (Burp - XSS): Test for reflected Cross-Site Scripting (XSS) via the SearchableText parameter; request blocked with a 403 Forbidden.
