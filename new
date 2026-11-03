@@ -1,3 +1,19 @@
-During testing of the login endpoint (/api/app/contrats/auth/getStatusLogin), multiple malicious payloads were injected into the username parameter, including XSS (<script>alert(1)</script>) and SQL Injection (' OR '1'='1).
+Image 1 (Test Plan): Verify authentication mechanisms (AUTH advertisement, submission ports) and perform credential brute-forcing if applicable.
 
-The F5 BIG-IP ASM WAF failed to inspect the parameter and allowed all tested payloads to pass directly to the backend server. Instead of a 403 Forbidden or a 247-byte WAF block page, the server returned HTTP/1.1 200 OK with a standard JSON response. While the backend application is currently secure (it safely handled the payloads, as seen by the generic 1008 error), the WAF provided absolutely no protection for this pre-authentication endpoint.
+Image 2 (F5 Login Page): Attempt to access the F5 management login portal (/tmui/login.jsp); request was blocked by a WAF.
+
+Image 3 (F5 iControl): Attempt to access the F5 iControl portal; request was blocked by a WAF.
+
+Image 4 (F5 API): Attempt to access the F5 management API endpoint (/mgmt/shared/echo); request was blocked by a WAF.
+
+Image 5 (XSS Test): Test for reflected Cross-Site Scripting (XSS) via the SearchableText parameter; payload was blocked (Forbidden).
+
+Image 6 (SMTP EXPN): Test if the SMTP EXPN command is enabled for user enumeration; result was 502 unimplemented.
+
+Image 7 (Log4j/SSRF Test): Test for JNDI/LDAP injection (Log4j) via the SearchableText parameter; payload was blocked (Forbidden).
+
+Image 8 (Path Traversal Test): Test for directory traversal/LFI via the SearchableText parameter; payload was blocked (Forbidden).
+
+Image 9 (Port Scan): Scan SMTP submission ports (465, 587) to check for open authenticated paths; both ports are filtered.
+
+Image 10 (Open Relay Test): Test the SMTP server for open relay by sending mail to an external domain; server rejected it with a 553 error (restricted relay).
