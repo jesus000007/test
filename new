@@ -1,9 +1,4 @@
-grep -rInHE --binary-files=without-match \
-  'pass(word|wd|phrase)?\s*[:=]|secret\s*[:=]|api[_-]?key\s*[:=]|token\s*[:=]|BEGIN [A-Z ]*PRIVATE KEY' \
-  /etc /opt /srv /var/www /home /usr/local /root 2>/dev/null \
-  --exclude-dir=proc --exclude-dir=sys --exclude-dir=dev --exclude-dir=run \
-  --exclude-dir=snap --exclude-dir=.cache --exclude-dir=node_modules \
-  --exclude-dir=.git --exclude-dir=__pycache__ --exclude-dir=vendor \
-  | grep -vE '/(pam\.d|security|pki|ssl/certs|alternatives|fonts|locale|man|doc|licenses|i18n)/' \
-  | grep -vE '\.(log|gz|bz2|xz|zip|jar|war|class|png|jpg|jpeg|gif|ico|woff|ttf|so|o|a|pyc|mo|po)$' \
-  | cut -c1-260
+find /home /root -maxdepth 4 -type f \( \
+     -name 'id_rsa' -o -name 'id_dsa' -o -name 'id_ecdsa' -o -name 'id_ed25519' \
+  -o -name '*.pem' -o -name '*.key' -o -name '*.ppk' -o -name '*.p12' -o -name '*.pfx' \
+  -o -name 'authorized_keys' -o -name 'known_hosts' \) -readable -ls 2>/dev/null
