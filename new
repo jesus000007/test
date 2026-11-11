@@ -1,17 +1,141 @@
-Image 1 (Burp - Path Traversal): Test for directory traversal/LFI via the SearchableText parameter; request blocked with a 403 Forbidden.
+Here is a comprehensive set of command-line commands to perform the security checks you listed on a Red Hat Linux server without a GUI. These commands are designed to be run from a terminal with appropriate (ideally `sudo`) privileges to ensure thorough results.
 
-Image 2 (Terminal - SMTP Pipelining): Test SMTP pipelining by sending multiple commands in one connection; external relay attempts were rejected (553).
+### 🔑 Hardcoded Credentials & Secrets
+Searching for hardcoded credentials involves scanning common configuration, script, and environment files for keywords like "password," "secret," "key," and "token."
 
-Image 3 (Terminal - SMTP Smuggling): Test for SMTP smuggling/open relay using smtpsmug; server rejected the external domain (553).
+*   **Broad Search in Common File Types**: This command combines `find` and `grep` to search through `.conf`, `.config`, `.ini`, `.env`, `.sh`, `.py`, `.pl`, and other script/config files for suspicious keywords.
+    ```bash
+    find / -type f \( -name "*.conf" -o -name "*.config" -o -name "*.cnf" -o -name "*.ini" -o -name "*.env" -o -name "*.sh" -o -name "*.py" -o -name "*.pl" -o -name "*.go" -o -name "*.jar" \) -exec grep -iE "password|passwd|secret|key|token" {} \; 2>/dev/null
+    ```
 
-Image 4 (Browser - SQLi): Test for SQL injection via the SearchableText parameter; payload was blocked (Forbidden).
+*   **Focused Search in Specific Directories**: For web-related credentials, focus on directories like `/var/www`, `/etc`, and `/opt`.
+    ```bash
+    grep -rliE "password|secret|key|token" /var/www /etc /opt /home 2>/dev/null
+    ```
 
-Image 5 (Burp - SQLi): Test for SQL injection via the SearchableText parameter; request blocked with a 403 Forbidden.
+*   **Extract Strings from Binaries**: Use `strings` on executable files to find hardcoded credentials that might be embedded in the binary.
+    ```bash
+    strings /path/to/binary | grep -iE "admin|root|password|user"
+    ```
 
-Image 6 (Terminal - TLS/SSL Scan): Scan SMTP port 25 for supported SSL/TLS ciphers; no SSL ciphers were found.
+### 🚀 SUID & SGID Binaries
+These commands find files with the SUID (Set User ID) or SGID (Set Group ID) bit set, which can be exploited for privilege escalation.
 
-Image 7 (Terminal - SMTP VRFY): Test SMTP VRFY command for user enumeration; server returned an ambiguous 252 response for all queries.
+*   **Find All SUID Binaries**:
+    ```bash
+    find / -type f -perm -4000 -ls 2>/dev/null
+    ```
 
-Image 8 (Browser - XSS): Test for reflected Cross-Site Scripting (XSS) via the SearchableText parameter; payload was blocked (Forbidden).
+*   **Find All SGID Binaries**:
+    ```bash
+    find / -type f -perm -2000 -ls 2>/dev/null
+    ```
 
-Image 9 (Burp - XSS): Test for reflected Cross-Site Scripting (XSS) via the SearchableText parameter; request blocked with a 403 Forbidden.
+*   **Find Both SUID and SGID Binaries**:
+    ```bash
+    find / -xdev -type f \( -perm -4000 -o -perm -2000 \) -ls 2>/dev/null
+    ```
+
+### 📂 Writable Paths, Files & Directories
+Finding world-writable or user-writable files and directories can reveal paths for privilege escalation.
+
+*   **Find World-Writable Files and Directories**:
+    ```bash
+    find / -not -type l -perm -o+w 2>/dev/null
+    ```
+    *   To specifically find **directories** that are world-writable: `find / -type d -perm -o+w 2>/dev/null`
+    *   To find **files** that are world-writable: `find / -type f -perm -o+w 2>/dev/null`
+
+*   **Find Writable Cron Job Scripts**: This is a common privilege escalation vector.
+    ```bash
+    find /etc/cron* /var/spool/cron* -type f -writable 2>/dev/null
+    ```
+
+### 🐧 Kernel & System Information
+Check the kernel version to identify known vulnerabilities.
+
+*   **Basic Kernel Information**:
+    ```bash
+    uname -a
+    ```
+    *   For **just the kernel release** version: `uname -r`
+    *   For **detailed version/build info**: `cat /proc/version`
+
+*   **List Installed Kernel Packages (RHEL/CentOS)**:
+    ```bash
+    rpm -q kernel
+    ```
+
+### 🔐 SSH & RSA Key Leaks
+Search for private keys and misconfigured SSH directories.
+
+*   **Find Private Keys with Common Names**: This searches for `id_rsa`, `id_ed25519`, `.pem`, and other key files.
+    ```bash
+    find /home /root -maxdepth 4 -type f \( -name "id_rsa" -o -name "id_ed25519" -o -name "*.pem" -o -name "*.key" \) -ls 2>/dev/null
+    ```
+
+*   **Check SSH Key Permissions**: Private keys should typically have `600` permissions, and the `.ssh` directory should be `700`.
+    ```bash
+    ls -la ~/.ssh/
+    ```
+
+### 🌐 Web Server & Application Configs
+Focus on configuration files for web servers (Apache, Nginx) and web applications (WordPress, etc.).
+
+*   **Locate Common Web App Config Files**:
+    ```bash
+    find /var/www -name "wp-config.php" -o -name "config.php" -o -name "configuration.php" 2>/dev/null
+    ```
+
+*   **Grep Web Configs for Credentials**:
+    ```bash
+    grep -rliE "db_pass|db_user|password|secret" /var/www/html 2>/dev/null
+    ```
+
+### 📜 Writable Scripts
+Find scripts (`.sh`, `.py`, etc.) that are writable by the current user, which could be modified for malicious purposes.
+
+```bash
+find / -path /proc -prune -o -type f -name "*.sh" -perm -o+w -print 2>/dev/null
+```
+
+### 🕵️ Sensitive File Exposure
+Check the permissions of critical system files.
+
+*   **Check `/etc/shadow` and `/etc/passwd`**: The `/etc/shadow` file should be readable only by root (or the shadow group), and `/etc/passwd` should be writable only by root.
+    ```bash
+    ls -la /etc/shadow /etc/passwd
+    ```
+    *   Expected: `/etc/shadow` should be `640` or stricter (e.g., `000` or `640 root:shadow`). `/etc/passwd` should be `644` (writable only by root).
+
+*   **Find World-Writable Sensitive Files**:
+    ```bash
+    find /etc /bin /sbin /usr/bin /usr/sbin -not -type l -perm -o+w -ls 2>/dev/null
+    ```
+
+### 🔌 Local Services & Potential Panels
+Enumerate locally listening services that may expose administrative panels or other sensitive interfaces.
+
+*   **List All Listening Ports and Associated Processes**: The `ss` command is the modern replacement for `netstat`.
+    ```bash
+    sudo ss -lntup
+    ```
+    *   `-l`: Show only listening sockets.
+    *   `-n`: Don't resolve service names (show port numbers).
+    *   `-t`: Show TCP sockets.
+    *   `-u`: Show UDP sockets.
+    *   `-p`: Show the process using the socket (requires `sudo`).
+
+*   **Alternative with `netstat` (Legacy)**: `sudo netstat -tunlp`
+
+*   **Check for Specific Local Web Panels**: Look for processes like `apache`, `nginx`, `jenkins`, `php-fpm`, or other application servers.
+    ```bash
+    ps -eo user,pid,args | grep -E '[a]pache|[n]ginx|[p]hp-fpm|[j]enkins|[t]omcat'
+    ```
+
+### 💡 Quick Tips
+*   **Suppress Errors**: The `2>/dev/null` at the end of `find` commands discards "Permission denied" errors, making the output cleaner.
+*   **Check GTFOBins**: If you find an unusual SUID binary, search for it on [GTFOBins](https://gtfobins.github.io/) to see if it has a known privilege escalation method.
+*   **Consider Automation**: For a more comprehensive and automated audit, consider running a script like **LinPEAS**, which performs many of these checks and highlights potential issues.
+
+These commands provide a solid foundation for your security audit on a Red Hat Linux server.
