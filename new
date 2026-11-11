@@ -1,4 +1,5 @@
-find /home /root -maxdepth 4 -type f \( \
-     -name 'id_rsa' -o -name 'id_dsa' -o -name 'id_ecdsa' -o -name 'id_ed25519' \
-  -o -name '*.pem' -o -name '*.key' -o -name '*.ppk' -o -name '*.p12' -o -name '*.pfx' \
-  -o -name 'authorized_keys' -o -name 'known_hosts' \) -readable -ls 2>/dev/null
+find / -xdev -type f -user root -writable 2>/dev/null \
+  | grep -vE '^/(proc|sys|dev|run|tmp|var/tmp)/' \
+  | grep -vE '/(\.cache|node_modules|__pycache__|\.git|\.local/share)/' \
+  | grep -vE '\.(log|gz|bz2|xz|zip|jar|war|class|png|jpg|jpeg|gif|ico|woff|ttf|so|o|a|pyc|mo)$' \
+  | head -200
