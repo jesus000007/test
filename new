@@ -1,16 +1,20 @@
-Unpatched NTP Daemon (Version-Based Vulnerability)
-Severity: Medium
-Affected Component: NTP Service / Firmware Management
-Affected Version: NTP 4.2.8p18 / LTOS V7.10.016 [unpatched]
+🔴 Finding 5: Cleartext SMTP Credentials and Sensitive Information Disclosure
+Severity: High (or Critical depending on internal network access)
+Affected Component: Notification Tab (Email Information)
 
-Description: The device is running an NTP daemon version that is associated with known remote, pre-authentication Denial of Service (DoS) vulnerabilities. Furthermore, the system reports an [unpatched] status, indicating missing interim security hotfixes.
+Description: The web application exposes highly sensitive email configuration data to low-privileged users. While the UI masks the password visually, the underlying HTML/HTTP response contains the cleartext password for the internal SMTP service account. It also leaks Personally Identifiable Information (PII) and internal infrastructure details.
 
-Observation: While reviewing the device's package version details via the diagnostics interface, it was observed that the system runs LTOS V7.10.016 [unpatched] and NTP Version 4.2.8p18. Public security research indicates that this specific NTP branch contains vulnerabilities (e.g., NTP Bug 3082) that allow an unauthenticated attacker to crash the NTP daemon with a single crafted packet. The [unpatched] flag suggests that the device is not receiving minor security hotfixes between major firmware releases.
+Observation: While authenticated as the low-privileged Info-User, navigating to Notification -> Email Information exposed the internal SMTP relay hostname (mailhost.fr.world.socgen), a valid employee email address (boubaker-seddik.rebhi@socgen.com), and the service account username (svcsmtpauthfrant). By inspecting the page source/intercepting the request, the cleartext password for this service account was visible (redacted in the attached evidence for security).
 
-Impact: Because this device is a critical time server, a successful Denial of Service attack would stop time synchronization for the entire network. This can cascade into catastrophic failures for other systems that rely on accurate time, such as Kerberos authentication failures, database transaction errors, and corrupted logs.
+Impact: This is a severe credential leak. An attacker can use the compromised SMTP service account credentials to send highly convincing, internal phishing emails (bypassing external spam filters), potentially compromising the mail relay server. The exposed administrator email address also provides a direct target for social engineering.
 
-Remediation: Apply the latest vendor-supplied interim patches for LTOS V7.10.016. If no patches are available, upgrade to the latest available firmware version that addresses the NTP DoS vulnerabilities. Monitor Meinberg security advisories for future updates.
+Remediation:
 
-CVSS v4.0 Score: 6.9 (Medium)
-CVSS v4.0 Vector: CVSS:4.0/AV:N/AC:H/AT:N/PR:N/UI:N/VC:N/VI:N/VA:H/SC:N/SI:N/SA:N
-(Metric note: AV:N and PR:N means it can be triggered remotely without authentication. AC:H (High Complexity) reflects that the attacker must craft a specific malformed packet to trigger the crash. VA:H (High Availability impact) because a successful crash stops the time service).
+Immediate Action: Rotate (change) the password for the svcsmtpauthfrant account immediately, as it must be considered compromised.
+
+Restrict access to the Notification page to Super-User accounts only.
+
+Never store or render passwords in cleartext in the backend HTTP response; ensure the server does not send the password to the client at all.
+
+CVSS v4.0 Score: 8.3 (High)
+CVSS v4.0 Vector: CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:L/VA:N/SC:L/SI:L/SA:N
