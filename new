@@ -1,20 +1,25 @@
-🔴 Finding 5: Cleartext SMTP Credentials and Sensitive Information Disclosure
-Severity: High (or Critical depending on internal network access)
-Affected Component: Notification Tab (Email Information)
+Broken Access Control on Firmware Management (Downgrade & DoS Risk)
+Severity: High
+Affected Component: System Tab (Firmware Management)
 
-Description: The web application exposes highly sensitive email configuration data to low-privileged users. While the UI masks the password visually, the underlying HTML/HTTP response contains the cleartext password for the internal SMTP service account. It also leaks Personally Identifiable Information (PII) and internal infrastructure details.
+Description: The web application allows a low-privileged Info-User to view, select, and potentially schedule or activate older firmware files. This represents a severe lack of authorization controls on a critical system function.
 
-Observation: While authenticated as the low-privileged Info-User, navigating to Notification -> Email Information exposed the internal SMTP relay hostname (mailhost.fr.world.socgen), a valid employee email address (boubaker-seddik.rebhi@socgen.com), and the service account username (svcsmtpauthfrant). By inspecting the page source/intercepting the request, the cleartext password for this service account was visible (redacted in the attached evidence for security).
+Observation: While authenticated as the Info-User, navigating to System -> Firmware Management revealed that the user could not only view the firmware history but could actively select older, outdated firmware files (fw_7.08.002 and fw_7.08.025) for activation. The Start Update button appeared grayed out, but the ability to schedule these files indicates a severe backend authorization flaw. (Note: The older OSV 6.24.020 was also exposed, which contains known critical CVEs).
 
-Impact: This is a severe credential leak. An attacker can use the compromised SMTP service account credentials to send highly convincing, internal phishing emails (bypassing external spam filters), potentially compromising the mail relay server. The exposed administrator email address also provides a direct target for social engineering.
+Impact:
+
+Downgrade Attacks: An attacker could downgrade the device to fw_7.08.002 or fw_7.08.025, reintroducing known vulnerabilities that were patched in the current 7.10.016 version, effectively bypassing all recent security updates.
+
+Denial of Service (DoS): If an Info-User is allowed to trigger a firmware rollback or an unsupported update sequence, it could corrupt the firmware image, "brick" the device, and cause a permanent outage to the network's time synchronization service.
 
 Remediation:
 
-Immediate Action: Rotate (change) the password for the svcsmtpauthfrant account immediately, as it must be considered compromised.
+Enforce Backend Authorization: Immediately implement strict server-side checks to ensure that only Super-User accounts can access the Firmware Management page and trigger updates or schedules.
 
-Restrict access to the Notification page to Super-User accounts only.
+Remove Old Firmware: Delete outdated and vulnerable firmware files (fw_7.08.002, fw_7.08.025, and the OSV) from the device's storage to prevent accidental or malicious downgrades.
 
-Never store or render passwords in cleartext in the backend HTTP response; ensure the server does not send the password to the client at all.
+Code Signing: Implement cryptographic code signing to ensure the device only accepts trusted, up-to-date firmware images.
 
-CVSS v4.0 Score: 8.3 (High)
-CVSS v4.0 Vector: CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:H/VI:L/VA:N/SC:L/SI:L/SA:N
+CVSS v4.0 Score: 7.1 (High)
+CVSS v4.0 Vector: CVSS:4.0/AV:N/AC:L/AT:P/PR:L/UI:N/VC:N/VI:H/VA:H/SC:N/SI:N/SA:N
+(Metric note: VI:H (High Integrity impact) because the attacker can alter the core firmware of the device. VA:H (High Availability impact) because a failed downgrade or bricking will take the time server offline).
