@@ -1,1 +1,3 @@
-(Get-ADComputer -Server "DC01.contoso.com" -Filter { OperatingSystem -notlike "*Server*" } | Measure-Object).Count
+(Get-ADComputer -Server "DC01.contoso.com" `
+    -LDAPFilter "(&(objectClass=Computer)(!operatingSystem=*server*))" `
+    -SearchBase "DC=contoso,DC=com").Count
