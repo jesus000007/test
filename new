@@ -1,3 +1,17 @@
-(Get-ADComputer -Server "DC01.contoso.com" `
-    -LDAPFilter "(&(objectClass=Computer)(!operatingSystem=*server*))" `
-    -SearchBase "DC=contoso,DC=com").Count
+# 1. Set the target DC and the Domain DN
+$TargetDC = "dc"
+$DomainDN = "DC=i,DC=com"
+
+# 2. Create the Searcher and point the SearchRoot to the specific DC
+$Searcher = [ADSISearcher]::new()
+$Searcher.SearchRoot = "LDAP://$TargetDC/$DomainDN"
+
+# 3. Filter for computer objects that are NOT servers
+$Searcher.Filter = "(&(objectCategory=computer)(!(operatingSystem=*server*)))"
+
+# 4. Set PageSize to avoid the default 1000-result limit
+$Searcher.PageSize = 2000
+
+# 5. Execute the query and output the count
+$Workstations = $Searcher.FindAll()
+Write-Host "Workstation count on $TargetDC : $($Workstations.Count)"
