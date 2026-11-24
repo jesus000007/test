@@ -1,44 +1,8 @@
-
-# 2. Create the Searcher and target the specific DC
-$Searcher = [ADSISearcher]::new()
-$Searcher.SearchRoot = "LDAP://$TargetDC/$DomainDN"
-
-# 3. Filter for workstations (exclude servers)
-$Searcher.Filter = "(&(objectCategory=computer)(!(operatingSystem=*server*)))"
-
-# 4. Only load the properties we need (Name and DNS Hostname) for better performance
-$Searcher.PropertiesToLoad.AddRange(@("Name", "dNSHostName"))
-$Searcher.PageSize = 2000
-
-Write-Host "Querying AD for workstations on $TargetDC..." -ForegroundColor Cyan
-
-# 5. Execute the search
-$Results = $Searcher.FindAll()
-
-$WorkstationList = foreach ($Result in $Results) {
-    $ShortName = $Result.Properties["name"][0]
-    $FQDN = if ($Result.Properties["dnshostname"].Count -gt 0) { $Result.Properties["dnshostname"][0] } else { $null }
-    
-    $IPAddress = "Unresolved"
-
-    # 6. Resolve the IP address using DNS if we have a hostname
-    if ($FQDN) {
-        try {
-            # Get the first IPv4 address
-            $IPAddress = ([System.Net.Dns]::GetHostAddresses($FQDN) | Where-Object { $_.AddressFamily -eq 'InterNetwork' } | Select-Object -First 1).IPAddressToString
-        } catch {
-            # Fails if the workstation is offline, turned off, or DNS record is missing
-            $IPAddress = "Offline/No DNS"
-        }
-    }
-
-    # 7. Output the results as a custom object
-    [PSCustomObject]@{
-        ComputerName = $ShortName
-        IPAddress    = $IPAddress
-        FQDN         = $FQDN
-    }
-}
-
-# 8. Display the results in a clean table
-$WorkstationList | Sort-Object ComputerName | Format-Table -AutoSize
+Get-Service CSFalconService
+Get-Process csagent -EA 0
+(Get-Item C:\Windows\System32\drivers\CrowdStrike\csagent.sys).VersionInfo.FileVersion
+Get-MpComputerStatus | select AMRunningMode,RealTimeProtectionEnabled
+Get-ItemProperty 'HKLM:\SOFTWARE\CrowdStrike' -EA 0
+Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer' -Name SmartScreenEnabled
+Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
+Get-AppLockerPolicy -Effective -EA 0
