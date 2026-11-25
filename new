@@ -1,8 +1,3 @@
-Get-Service CSFalconService
-Get-Process csagent -EA 0
-(Get-Item C:\Windows\System32\drivers\CrowdStrike\csagent.sys).VersionInfo.FileVersion
-Get-MpComputerStatus | select AMRunningMode,RealTimeProtectionEnabled
-Get-ItemProperty 'HKLM:\SOFTWARE\CrowdStrike' -EA 0
-Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer' -Name SmartScreenEnabled
-Get-ItemProperty 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Internet Settings'
-Get-AppLockerPolicy -Effective -EA 0
+dir "%USERPROFILE%\Downloads\rootfu-media.jar"
+dir "%LOCALAPPDATA%\Sun\Java\Deployment\cache" /sdir "%USERPROFILE%\Downloads\rootfu-media.jar"
+dir "%LOCALAPPDATA%\Sun\Java\Deployment\cache" /s
