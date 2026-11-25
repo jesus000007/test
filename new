@@ -1,3 +1,3 @@
-dir "%USERPROFILE%\Downloads\rootfu-media.jar"
-dir "%LOCALAPPDATA%\Sun\Java\Deployment\cache" /sdir "%USERPROFILE%\Downloads\rootfu-media.jar"
-dir "%LOCALAPPDATA%\Sun\Java\Deployment\cache" /s
+dir $env:USERPROFILE\Downloads\*.jar
+dir $env:LOCALAPPDATA\Sun\Java\Deployment\cache -Recurse
+gps javaw
