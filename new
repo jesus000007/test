@@ -5,3 +5,6 @@ iwr -Headers @{Authorization="Bearer 6e523e36-67ad-4f5a-9e54-473c234e33cc"} -Uri
 
 
 & "$env:TEMP\install.ps1"
+
+
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
