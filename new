@@ -1,1 +1,1 @@
-& "$env:TEMP\install.ps1"
+Get-Service -Name "OAEVAgent-Service-*"
